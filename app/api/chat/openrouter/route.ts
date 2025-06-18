@@ -1,51 +1,21 @@
-import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
-import { ChatSettings } from "@/types"
-import { OpenAIStream, StreamingTextResponse } from "ai"
-import { ServerRuntime } from "next"
-import OpenAI from "openai"
-import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions.mjs"
+export const runtime = 'edge';
 
-export const runtime: ServerRuntime = "edge"
+export async function POST(req: Request) {
+  const body = await req.json();
 
-export async function POST(request: Request) {
-  const json = await request.json()
-  const { chatSettings, messages } = json as {
-    chatSettings: ChatSettings
-    messages: any[]
-  }
+  const response = await fetch("https://df8f-115-96-219-10.ngrok-free.app/webhook/chat-ui", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
-  try {
-    const profile = await getServerProfile()
+  const result = await response.text(); // Or use `.json()` if you're returning JSON from n8n
 
-    checkApiKey(profile.openrouter_api_key, "OpenRouter")
-
-    const openai = new OpenAI({
-      apiKey: profile.openrouter_api_key || "",
-      baseURL: "https://openrouter.ai/api/v1"
-    })
-
-    const response = await openai.chat.completions.create({
-      model: chatSettings.model as ChatCompletionCreateParamsBase["model"],
-      messages: messages as ChatCompletionCreateParamsBase["messages"],
-      temperature: chatSettings.temperature,
-      max_tokens: undefined,
-      stream: true
-    })
-
-    const stream = OpenAIStream(response)
-
-    return new StreamingTextResponse(stream)
-  } catch (error: any) {
-    let errorMessage = error.message || "An unexpected error occurred"
-    const errorCode = error.status || 500
-
-    if (errorMessage.toLowerCase().includes("api key not found")) {
-      errorMessage =
-        "OpenRouter API Key not found. Please set it in your profile settings."
-    }
-
-    return new Response(JSON.stringify({ message: errorMessage }), {
-      status: errorCode
-    })
-  }
+  return new Response(result, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 }
+
