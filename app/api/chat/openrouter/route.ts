@@ -1,23 +1,17 @@
-export const runtime = "edge";
-
-export async function POST(req: Request) {
-  const body = await req.text();
-
-  const authHeader = "Basic " + btoa("admin:daredevils");
+export async function POST(request: Request) {
+  const { messages } = await request.json();
 
   const response = await fetch("https://df8f-115-96-219-10.ngrok-free.app/webhook/chat", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": authHeader
+      "Content-Type": "application/json"
     },
-    body
+    body: JSON.stringify({ messages })
   });
 
-  const result = await response.text();
+  const result = await response.json();
 
-  return new Response(result, {
-    status: response.status,
-    headers: { "Content-Type": "application/json" }
+  return new Response(JSON.stringify({ text: result.data }), {
+    status: 200
   });
 }
