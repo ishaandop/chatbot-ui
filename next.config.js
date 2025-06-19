@@ -24,9 +24,6 @@ module.exports = withBundleAnalyzer(
           hostname: "**"
         }
       ]
-    },
-    experimental: {
-      serverComponentsExternalPackages: ["sharp", "onnxruntime-node"]
-    }
+    }, 
   })
 )
